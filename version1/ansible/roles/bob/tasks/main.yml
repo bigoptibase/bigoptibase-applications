@@ -1,0 +1,51 @@
+---
+# tasks file for bob
+# - name: REDIS RUN
+#   apt_key:
+#     url: https://download.docker.com/linux/debian/gpg
+#     state: present
+- name: DOCKER CONTAINER RUNNING
+  docker_container:
+    name: myredis
+    image: "{{ redis_container }}"
+    state: started
+    restart_policy: unless-stopped
+    published_ports: "127.0.0.1:6379:6379"
+
+- name: Copy .whl file
+  copy:
+    src: "{{ bob_pkg_name }}"
+    dest: "/tmp/{{ bob_pkg_name }}"
+  notify:
+    - Install package
+    - Restart supervisor
+
+
+- name: Setup DCSS configuration
+  template:
+    src: dcss.conf.j2
+    dest: /etc/dcss.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify:
+    - Restart supervisor
+
+- name: Install Supervisor
+  apt:
+    name: supervisor
+    state: latest
+
+- name: Supervisor service started
+  service:
+    name: supervisor
+    state: started
+    enabled: yes
+
+- name: Copy supervisor confs
+  copy:
+    src: "{{ item }}"
+    dest: "/etc/supervisor/conf.d/{{ item }}"
+  loop: ['worker.conf', 'beat.conf']
+  notify:
+    - Restart supervisor

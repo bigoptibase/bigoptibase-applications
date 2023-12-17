@@ -1,0 +1,2 @@
+[pies]
+pihome ansible_host=pihome ansible_user=root

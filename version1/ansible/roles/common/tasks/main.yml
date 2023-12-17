@@ -1,0 +1,5 @@
+---
+# tasks file for common
+- name: Install basic system packages
+  apt: name={{ item }} state=latest update_cache=yes
+  loop: "{{ basic_packages }}"
