@@ -148,7 +148,12 @@ class InfluxHelper(object):
         """
         channel 05 temperature A
         channel 13 temperature B
+        channel 21 temperature C
         channel 01 power A
+        channel 02 power B
+        channel 03 power C
+        channel 04 power D
+        channel Rh humidity
 
         :param channel:
         :param interval: timewindow in seconds

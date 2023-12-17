@@ -22,6 +22,18 @@ dsc = DataShippingClient()
 red = redis.Redis(host=REDIS_HOST)
 ifxh = InfluxHelper()
 
+# CHANNEL_DICT as provided
+CHANNEL_DICT = {
+    '01': 'power_1',
+    '02': 'power_2',
+    '03': 'power_3',
+    '04': 'power_4',
+    '05': 'temperature_1',
+    '13': 'temperature_2',
+    '21': 'temperature_3',
+    'Rh': 'humidity'
+}
+
 
 @app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
@@ -30,81 +42,161 @@ def setup_periodic_tasks(sender, **kwargs):
     # Here it is assumed that COLLECT_INTERVAL == INFLUX_TIMEWINDOW
     # sender.add_periodic_task(60.0, upload_channel_data.s('05', 60), name='Uploading {}'.format(CHANNEL_DICT['05']))
 
+    # Upload Channel 05 - Temperature A
     sender.add_periodic_task(float(INTERVAL_DICT['05']), upload_channel_data.s('05', int(INTERVAL_DICT['05'])),
                              name='Uploading {}'.format(CHANNEL_DICT['05']))
 
-    # Upload Channel 13
-    sender.add_periodic_task(float(INTERVAL_DICT['13']), upload_channel_data.s('13', int(INTERVAL_DICT['05'])),
+    # Upload Channel 13 - Temperature B
+    sender.add_periodic_task(float(INTERVAL_DICT['13']), upload_channel_data.s('13', int(INTERVAL_DICT['13'])),
                              name='Uploading {}'.format(CHANNEL_DICT['13']))
 
-    # Upload Channel 01
-    sender.add_periodic_task(
-        float(INTERVAL_DICT['01']),
-        upload_channel_data.s('01', int(INTERVAL_DICT['01'])),
-        name='Uploading {}'.format(CHANNEL_DICT['01'])
-    )
+    # Upload Channel 21 - Temperature C
+    sender.add_periodic_task(float(INTERVAL_DICT['21']), upload_channel_data.s('21', int(INTERVAL_DICT['21'])),
+                             name='Uploading {}'.format(CHANNEL_DICT['21']))
+
+    # Upload Channel 01 - Power A
+    sender.add_periodic_task(float(INTERVAL_DICT['01']), upload_channel_data.s('01', int(INTERVAL_DICT['01'])),
+                             name='Uploading {}'.format(CHANNEL_DICT['01']))
+
+    # Upload Channel 02 - Power B
+    sender.add_periodic_task(float(INTERVAL_DICT['02']), upload_channel_data.s('02', int(INTERVAL_DICT['02'])),
+                             name='Uploading {}'.format(CHANNEL_DICT['02']))
+
+    # Upload Channel 03 - Power C
+    sender.add_periodic_task(float(INTERVAL_DICT['03']), upload_channel_data.s('03', int(INTERVAL_DICT['03'])),
+                             name='Uploading {}'.format(CHANNEL_DICT['03']))
+
+    # Upload Channel 04 - Power D
+    sender.add_periodic_task(float(INTERVAL_DICT['04']), upload_channel_data.s('04', int(INTERVAL_DICT['04'])),
+                             name='Uploading {}'.format(CHANNEL_DICT['04']))
+
+    # Upload Channel Rh - Humidity
+    sender.add_periodic_task(float(INTERVAL_DICT['Rh']), upload_channel_data.s('Rh', int(INTERVAL_DICT['Rh'])),
+                             name='Uploading {}'.format(CHANNEL_DICT['Rh']))
 
 
 @app.task
 def collect_temperature():
-    logger.info('Collecting Temperature')
+    temperature_channels = ['05', '13', '21']
 
-    # Read Value from the platform/influx/wherever
-    # TODO @DPANTAZATOS
-    # Currently retrieving a random number
-    temp = round(random.uniform(28.0, 36.0), 2)
+    for channel in temperature_channels:
+        channel_key = CHANNEL_DICT[channel]  # e.g., 'temperature_1' for channel '05'
 
-    logger.debug('Temperature value retrieved: {}'.format(temp))
+        logger.info(f'Collecting Temperature from channel {channel} ({channel_key})')
 
-    # Store Value to Redis
-    red.lpush('temperature', temp)
+        # Read value from InfluxDB for the specific channel
+        # Implement 'get_latest_value' in InfluxHelper to fetch the latest temperature data
+        temp = ifxh.get_latest_value(channel)
 
+        if temp is not None:
+            logger.debug(f'Temperature value from channel {channel} ({channel_key}) retrieved: {temp}')
+            # Store the value in Redis under the channel-specific key
+            red.lpush(channel_key, temp)
+        else:
+            logger.warning(f'No data retrieved from channel {channel} ({channel_key})')
+
+@app.task
+def collect_power():
+    power_channels = ['01', '02', '03', '04']
+
+    for channel in power_channels:
+        channel_key = CHANNEL_DICT[channel]  # e.g., 'power_1' for channel '01'
+
+        logger.info(f'Collecting Power from channel {channel} ({channel_key})')
+
+        # Read value from InfluxDB for the specific power channel
+        # Implement 'get_latest_value' in InfluxHelper to fetch the latest power data
+        power = ifxh.get_latest_value(channel)
+
+        if power is not None:
+            logger.debug(f'Power value from channel {channel} ({channel_key}) retrieved: {power}')
+            # Store the value in Redis under the channel-specific key
+            red.lpush(channel_key, power)
+        else:
+            logger.warning(f'No data retrieved from channel {channel} ({channel_key})')
 
 @app.task
 def collect_humidity():
-    logger.info('Collecting Humidity')
+    humidity_channel = 'Rh'
+    channel_key = CHANNEL_DICT[humidity_channel]  # e.g., 'humidity'
 
-    # Read Value from the platform/influx/wherever
-    # Currently retrieving a random number
-    hum = round(random.uniform(58.0, 78.0), 2)
+    logger.info(f'Collecting Humidity from channel {humidity_channel} ({channel_key})')
 
-    logger.debug('Humidity value retrieved: {}'.format(hum))
+    # Read value from InfluxDB for the humidity channel
+    # Implement 'get_latest_value' in InfluxHelper to fetch the latest humidity data
+    hum = ifxh.get_latest_value(humidity_channel)
 
-    # Store Value to Redis
-    red.lpush('humidity', hum)
+    if hum is not None:
+        logger.debug(f'Humidity value from channel {humidity_channel} ({channel_key}) retrieved: {hum}')
+        # Store the value in Redis under the channel-specific key
+        red.lpush(channel_key, hum)
+    else:
+        logger.warning(f'No data retrieved from channel {humidity_channel} ({channel_key})')
 
 
 @app.task
 def upload_temperature():
-    logger.info('Uploading Temperature')
+    temperature_channels = ['05', '13', '21']
 
-    # Retrieve Value from REDIS
-    val = red.rpop('temperature')
+    for channel in temperature_channels:
+        channel_key = CHANNEL_DICT[channel]  # e.g., 'temperature_1' for channel '05'
 
-    try:
-        start_time = time.time()
-        dsc.send_data('temperature', val.decode())
-        logger.debug("--- Uploading temperature took %s seconds ---" % (time.time() - start_time))
+        logger.info(f'Uploading Temperature data from channel {channel} ({channel_key})')
 
-    except AttributeError:
-        logger.warning('Value {} could not be decoded. Skipping'.format(val))
+        # Retrieve Value from REDIS for each temperature channel
+        val = red.rpop(channel_key)
 
+        if val is not None:
+            try:
+                start_time = time.time()
+                dsc.send_data(channel_key, val.decode())  # Use channel_key as the data identifier
+                logger.debug(f"--- Uploading {channel_key} took {time.time() - start_time} seconds ---")
+            except AttributeError:
+                logger.warning(f'Value {val} from {channel_key} could not be decoded. Skipping')
+        else:
+            logger.info(f'No data to upload for {channel_key}')
+
+@app.task
+def upload_power():
+    power_channels = ['01', '02', '03', '04']
+
+    for channel in power_channels:
+        channel_key = CHANNEL_DICT[channel]  # e.g., 'power_1' for channel '01'
+
+        logger.info(f'Uploading Power data from channel {channel} ({channel_key})')
+
+        # Retrieve Value from REDIS for each power channel
+        val = red.rpop(channel_key)
+
+        if val is not None:
+            try:
+                start_time = time.time()
+                dsc.send_data(channel_key, val.decode())  # Use channel_key as the data identifier
+                logger.debug(f"--- Uploading {channel_key} took {time.time() - start_time} seconds ---")
+            except AttributeError:
+                logger.warning(f'Value {val} from {channel_key} could not be decoded. Skipping')
+        else:
+            logger.info(f'No data to upload for {channel_key}')
 
 @app.task
 def upload_humidity():
-    logger.info('Uploading Humidity')
+    humidity_channel = 'Rh'
+    channel_key = CHANNEL_DICT[humidity_channel]  # e.g., 'humidity' for channel 'Rh'
 
-    # Retrieve Value from REDIS
-    val = red.rpop('humidity')
+    logger.info(f'Uploading Humidity data from channel {humidity_channel} ({channel_key})')
 
-    try:
-        start_time = time.time()
-        dsc.send_data('humidity', val.decode())
-        logger.debug("--- Uploading humidity took %s seconds ---" % (time.time() - start_time))
+    # Retrieve Value from REDIS for the humidity channel
+    val = red.rpop(channel_key)
 
-    except AttributeError:
-        logger.warning('Value {} could not be decoded. Skipping'.format(val))
-
+    if val is not None:
+        try:
+            start_time = time.time()
+            dsc.send_data(channel_key, val.decode())  # Use channel_key as the data identifier
+            logger.debug(f"--- Uploading {channel_key} took {time.time() - start_time} seconds ---")
+        except AttributeError:
+            logger.warning(f'Value {val} from {channel_key} could not be decoded. Skipping')
+    else:
+        logger.info(f'No data to upload for {channel_key}')
 
 @app.task
 def upload_channel_data(channel, interval):
