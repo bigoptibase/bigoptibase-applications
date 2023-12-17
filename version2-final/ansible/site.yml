@@ -1,0 +1,15 @@
+---
+- name: Manage Big Opti Base nodes
+  hosts: all
+  become: yes
+  become_method: sudo
+
+
+  roles:
+    - common
+    # user, pass
+    - docker
+    # redis up and running
+    - bob
+    # big opti base install software, dependencies
+...

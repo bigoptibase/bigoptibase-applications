@@ -1,0 +1,26 @@
+---
+# tasks file for docker
+- name: Add Docker GPG apt Key
+  apt_key:
+    url: https://download.docker.com/linux/debian/gpg
+    state: present
+
+- name: install repo
+  copy:
+    src: set_docker_repo.sh
+    dest: /tmp/set_docker_repo.sh
+
+- name: execute repo script
+  shell:
+    cmd: /bin/bash /tmp/set_docker_repo.sh
+
+- name: Update apt and Install docker-ce
+  apt:
+    update_cache: yes
+    name: "{{ item }}"
+    state: latest
+  loop: ['docker-ce', 'docker-ce-cli', 'containerd.io', 'python-backports.ssl-match-hostname']
+
+- name: Install docker python module
+  pip:
+    name: docker
