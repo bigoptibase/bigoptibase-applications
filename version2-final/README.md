@@ -9,6 +9,8 @@ Data Collection Scheduling System
 
 Have a REDIS installed and running.
 
+Install Kafka Confluence
+
 ### Operations
 
 
