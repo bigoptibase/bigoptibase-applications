@@ -8,10 +8,6 @@ import time
 from dcss.config.defaults import REDIS_HOST, CHANNEL_DICT, INTERVAL_DICT
 from dcss.generic.utils import DataShippingClient, InfluxHelper
 
-# Import the Kafka sending function
-# from dcss.generic.producer_kafka import send_to_kafka
-# import json
-
 from dcss import config as celery_conf
 from dcss.config import appname
 
@@ -29,13 +25,7 @@ ifxh = InfluxHelper()
 # CHANNEL_DICT as provided
 CHANNEL_DICT = {
     '01': 'wattage',
-    # '02': 'wattage_2',
-    # '03': 'wattage_3',
-    # '04': 'wattage_4',
-    '05': 'temperature',
-    # '13': 'temperature_2',
-    # '21': 'temperature_3',
-    # 'Rh': 'humidity'
+    '05': 'temperature'
 }
 
 
@@ -50,33 +40,9 @@ def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(float(INTERVAL_DICT['05']), upload_channel_data.s('05', int(INTERVAL_DICT['05'])),
                              name='Uploading {}'.format(CHANNEL_DICT['05']))
 
-    # Upload Channel 13 - Temperature B
-    # sender.add_periodic_task(float(INTERVAL_DICT['13']), upload_channel_data.s('13', int(INTERVAL_DICT['13'])),
-    #                         name='Uploading {}'.format(CHANNEL_DICT['13']))
-
-    # Upload Channel 21 - Temperature C
-    # sender.add_periodic_task(float(INTERVAL_DICT['21']), upload_channel_data.s('21', int(INTERVAL_DICT['21'])),
-    #                         name='Uploading {}'.format(CHANNEL_DICT['21']))
-
     # Upload Channel 01 - Power A
     sender.add_periodic_task(float(INTERVAL_DICT['01']), upload_channel_data.s('01', int(INTERVAL_DICT['01'])),
                              name='Uploading {}'.format(CHANNEL_DICT['01']))
-
-    # Upload Channel 02 - Power B
-    # sender.add_periodic_task(float(INTERVAL_DICT['02']), upload_channel_data.s('02', int(INTERVAL_DICT['02'])),
-    #                         name='Uploading {}'.format(CHANNEL_DICT['02']))
-
-    # Upload Channel 03 - Power C
-    # sender.add_periodic_task(float(INTERVAL_DICT['03']), upload_channel_data.s('03', int(INTERVAL_DICT['03'])),
-    #                        name='Uploading {}'.format(CHANNEL_DICT['03']))
-
-    # Upload Channel 04 - Power D
-    # sender.add_periodic_task(float(INTERVAL_DICT['04']), upload_channel_data.s('04', int(INTERVAL_DICT['04'])),
-    #                        name='Uploading {}'.format(CHANNEL_DICT['04']))
-
-    # Upload Channel Rh - Humidity
-    # sender.add_periodic_task(float(INTERVAL_DICT['Rh']), upload_channel_data.s('Rh', int(INTERVAL_DICT['Rh'])),
-    #                         name='Uploading {}'.format(CHANNEL_DICT['Rh']))
 
 
 @app.task
@@ -119,24 +85,6 @@ def collect_power():
         else:
             logger.warning(f'No data retrieved from channel {channel} ({channel_key})')
 
-#@app.task
-#def collect_humidity():
-#    humidity_channel = 'Rh'
-#    channel_key = CHANNEL_DICT[humidity_channel]  # e.g., 'humidity'
-#
-#    logger.info(f'Collecting Humidity from channel {humidity_channel} ({channel_key})')
-#
-    # Read value from InfluxDB for the humidity channel
-    # Implement 'get_latest_value' in InfluxHelper to fetch the latest humidity data
-#    hum = ifxh.get_latest_value(humidity_channel)
-#
-#    if hum is not None:
-#        logger.debug(f'Humidity value from channel {humidity_channel} ({channel_key}) retrieved: {hum}')
-#        # Store the value in Redis under the channel-specific key
-#        red.lpush(channel_key, hum)
-#    else:
-#        logger.warning(f'No data retrieved from channel {humidity_channel} ({channel_key})')
-
 
 @app.task
 def upload_temperature():
@@ -155,10 +103,6 @@ def upload_temperature():
                 start_time = time.time()
                 dsc.send_data(channel_key, val.decode())  # Use channel_key as the data identifier
                 logger.debug(f"--- Uploading {channel_key} took {time.time() - start_time} seconds ---")
-                # Prepare the data payload for Kafka
-                # data_payload = {'channel': channel_key, 'temperature': json.loads(val)}
-                # Send temperature data to Kafka
-                # send_to_kafka('temperature', data_payload)  # Replace 'temperature' with your Kafka topic
             except AttributeError:
                 logger.warning(f'Value {val} from {channel_key} could not be decoded. Skipping')
         else:
@@ -181,38 +125,11 @@ def upload_power():
                 start_time = time.time()
                 dsc.send_data(channel_key, val.decode())  # Use channel_key as the data identifier
                 logger.debug(f"--- Uploading {channel_key} took {time.time() - start_time} seconds ---")
-                # Prepare the data payload for Kafka
-                # data_payload = {'channel': channel_key, 'power': json.loads(val)}
-                # Send temperature data to Kafka
-                # send_to_kafka('power', data_payload)  # Replace 'power' with your Kafka topic
             except AttributeError:
                 logger.warning(f'Value {val} from {channel_key} could not be decoded. Skipping')
         else:
             logger.info(f'No data to upload for {channel_key}')
 
-#@app.task
-#def upload_humidity():
-#    humidity_channel = 'Rh'
-#    channel_key = CHANNEL_DICT[humidity_channel]  # e.g., 'humidity' for channel 'Rh'
-#
-#    logger.info(f'Uploading Humidity data from channel {humidity_channel} ({channel_key})')
-#
-    # Retrieve Value from REDIS for the humidity channel
-#    val = red.rpop(channel_key)
-#
-#    if val is not None:
-#        try:
-#            start_time = time.time()
-#            dsc.send_data(channel_key, val.decode())  # Use channel_key as the data identifier
-#            logger.debug(f"--- Uploading {channel_key} took {time.time() - start_time} seconds ---")
-            # Prepare the data payload for Kafka
-#            data_payload = {'channel': channel_key, 'humidity': json.loads(val)}
-            # Send temperature data to Kafka
-#            send_to_kafka('humidity', data_payload)  # Replace 'humidity' with your Kafka topic
-#        except AttributeError:
-#            logger.warning(f'Value {val} from {channel_key} could not be decoded. Skipping')
-#    else:
-#        logger.info(f'No data to upload for {channel_key}')
 
 @app.task
 def upload_channel_data(channel, interval):
