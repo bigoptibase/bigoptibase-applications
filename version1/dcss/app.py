@@ -24,11 +24,11 @@ ifxh = InfluxHelper()
 
 # CHANNEL_DICT as provided
 CHANNEL_DICT = {
-    '01': 'power_1',
-    '02': 'power_2',
-    '03': 'power_3',
-    '04': 'power_4',
-    '05': 'temperature_1',
+    '01': 'wattage',
+    '02': 'wattage_2',
+    '03': 'wattage_3',
+    '04': 'wattage_4',
+    '05': 'temperature',
     '13': 'temperature_2',
     '21': 'temperature_3',
     'Rh': 'humidity'
@@ -64,11 +64,11 @@ def setup_periodic_tasks(sender, **kwargs):
 
     # Upload Channel 03 - Power C
     sender.add_periodic_task(float(INTERVAL_DICT['03']), upload_channel_data.s('03', int(INTERVAL_DICT['03'])),
-                             name='Uploading {}'.format(CHANNEL_DICT['03']))
+                            name='Uploading {}'.format(CHANNEL_DICT['03']))
 
     # Upload Channel 04 - Power D
     sender.add_periodic_task(float(INTERVAL_DICT['04']), upload_channel_data.s('04', int(INTERVAL_DICT['04'])),
-                             name='Uploading {}'.format(CHANNEL_DICT['04']))
+                            name='Uploading {}'.format(CHANNEL_DICT['04']))
 
     # Upload Channel Rh - Humidity
     sender.add_periodic_task(float(INTERVAL_DICT['Rh']), upload_channel_data.s('Rh', int(INTERVAL_DICT['Rh'])),
@@ -109,7 +109,7 @@ def collect_power():
         power = ifxh.get_latest_value(channel)
 
         if power is not None:
-            logger.debug(f'Power value from channel {channel} ({channel_key}) retrieved: {power}')
+            logger.debug(f'Wattage value from channel {channel} ({channel_key}) retrieved: {power}')
             # Store the value in Redis under the channel-specific key
             red.lpush(channel_key, power)
         else:
@@ -158,7 +158,7 @@ def upload_temperature():
 
 @app.task
 def upload_power():
-    power_channels = ['01', '02', '03', '04']
+    power_channels = ['01', '2', '3', '4']
 
     for channel in power_channels:
         channel_key = CHANNEL_DICT[channel]  # e.g., 'power_1' for channel '01'
