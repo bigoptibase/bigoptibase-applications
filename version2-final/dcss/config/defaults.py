@@ -1,9 +1,9 @@
 import configparser
 
-KEYCLOAK_URL = "https://iccs-bigdata.cslab.ece.ntua.gr:8443/auth/realms/test_realm/protocol/openid-connect/token"
-KEYCLOAK_CLIENT_ID = "bda_client"
-KEYCLOAK_CLIENT_SECRET = "bda_secret"
-BDA_URL = "https://iccs-bigdata.cslab.ece.ntua.gr:9999/api/datastore/bigoptibase"
+KEYCLOAK_URL = ""
+KEYCLOAK_CLIENT_ID = ""
+KEYCLOAK_CLIENT_SECRET = ""
+BDA_URL = ""
 
 CONF_FILE = "/etc/dcss.conf"
 
@@ -14,10 +14,10 @@ REDIS_HOST = '127.0.0.1'
 DEFAULT_COLLECTION_INTERVAL = 30
 
 CHANNEL_DICT = {
-    '01': 'power_1',
-    '02': 'power_2',
-    '03': 'power_3',
-    '04': 'power_4',
+    '01': 'wattage_1',
+    '02': 'wattage_2',
+    '03': 'wattage_3',
+    '04': 'wattage_4',
     '05': 'temperature_1',
     '13': 'temperature_2',
     '21': 'temperature_3',
