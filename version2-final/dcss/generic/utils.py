@@ -155,8 +155,14 @@ class InfluxHelper(object):
 
     def query(self, channel, interval):
         """
-        channel 05 temperature
-        channel 01 wattage
+        channel 05 temperature A
+        channel 13 temperature B
+        channel 21 temperature C
+        channel 01 wattage A
+        channel 02 wattage B
+        channel 03 wattage C
+        channel 04 wattage D
+        channel Rh humidity
 
         :param channel:
         :param interval: timewindow in seconds
@@ -180,12 +186,3 @@ class InfluxHelper(object):
 
         except KeyError:
             return None
-        
-#channel 05 temperature A
-#channel 13 temperature B
-#channel 21 temperature C
-#channel 01 wattage A
-#channel 02 wattage B
-#channel 03 wattage C
-#channel 04 wattage D
-#channel Rh humidity
