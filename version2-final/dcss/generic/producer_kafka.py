@@ -9,11 +9,11 @@ import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # Configuration parameters
-KAFKA_BROKER = '147.102.4.107:9092'
-TOKEN_URL = 'https://iccs-bigdata.cslab.ece.ntua.gr:8443/auth/realms/test_realm/protocol/openid-connect/token'
-CLIENT_ID = 'kafka-netmode-producer'
-CLIENT_SECRET = 'e8ed6031-8f0e-4080-9796-ab039667dfe1'
-GRANT_TYPE = 'client_credentials'
+KAFKA_BROKER = ''
+TOKEN_URL = ''
+CLIENT_ID = ''
+CLIENT_SECRET = ''
+GRANT_TYPE = ''
 
 # Setting up logging
 logging.basicConfig(level=logging.INFO)
