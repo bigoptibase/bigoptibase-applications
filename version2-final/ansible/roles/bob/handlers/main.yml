@@ -1,0 +1,12 @@
+---
+# handlers file for bob
+- name: Install package
+  pip:
+    name: "{{ bob_pkg_name }}"
+    chdir: /tmp
+    executable: /usr/bin/pip3
+    state: forcereinstall
+- name: Restart supervisor
+  service:
+    name: supervisor
+    state: restarted
