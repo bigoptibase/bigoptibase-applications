@@ -1,0 +1,4 @@
+requests
+celery==5.2.1
+redis==4.0.2
+influxdb==5.3.1
