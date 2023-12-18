@@ -1,11 +1,11 @@
 ---
 # vars file for bob
-BDA_USERNAME: "netmode"
-BDA_PASSWORD: "3fssd*keqp794"
+BDA_USERNAME: ""
+BDA_PASSWORD: ""
 
-INFLUX_DBNAME: "bigOptiBase"
-INFLUX_USER: "bigOptiUser"
-INFLUX_PASSWD: "#bigOptiPa$$"
+INFLUX_DBNAME: ""
+INFLUX_USER: ""
+INFLUX_PASSWD: ""
 INFLUX_MEASUREMENT: "BS12"
 INFLUX_HOST: "localhost"
 INFLUX_PORT: "8086"
