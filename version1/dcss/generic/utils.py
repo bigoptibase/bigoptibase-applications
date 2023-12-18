@@ -2,6 +2,7 @@ import requests
 import logging
 import json
 import configparser
+import datetime
 from influxdb import InfluxDBClient
 
 from dcss.config.defaults import KEYCLOAK_CLIENT_ID, KEYCLOAK_CLIENT_SECRET, KEYCLOAK_URL, BDA_URL, CONF_FILE
@@ -74,6 +75,9 @@ class DataShippingClient(object):
             'Authorization': 'bearer {}'.format(self.token)
         }
 
+        # Get current timestamp and format it
+        current_timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+
         data_payload = json.dumps(
             {
                 "entries": [{
@@ -82,7 +86,12 @@ class DataShippingClient(object):
                 }, {
                     "key": "payload",
                     "value": data_value
-                }],
+                },
+                {
+                    "key": "datetime",
+                    "value": current_timestamp
+                }
+                ],
                 "nested": []
             }
         )
@@ -146,9 +155,8 @@ class InfluxHelper(object):
 
     def query(self, channel, interval):
         """
-        channel 05 temperature A
-        channel 13 temperature B
-        channel 01 power A
+        channel 05 temperature
+        channel 01 wattage
 
         :param channel:
         :param interval: timewindow in seconds
@@ -172,3 +180,12 @@ class InfluxHelper(object):
 
         except KeyError:
             return None
+        
+#channel 05 temperature A
+#channel 13 temperature B
+#channel 21 temperature C
+#channel 01 wattage A
+#channel 02 wattage B
+#channel 03 wattage C
+#channel 04 wattage D
+#channel Rh humidity
